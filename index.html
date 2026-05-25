@@ -511,7 +511,7 @@ function pick(sid){
   // Show first Beany reaction immediately with animation
   const firstMood = rx[0]?.m||"定";
   const firstEl = rx[0]?.el||"金";
-  const anim = animForBeanyMood(firstMood);
+  // anim handled by startBeanyAnim now
   
   let h=topbar(); h+=`<div id="wrap">`;
   S.log.forEach(s=>{
