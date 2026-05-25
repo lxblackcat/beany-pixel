@@ -61,138 +61,213 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 <script>
 // ═══════════════ PIXEL BEANY ENGINE ═══════════════
 const SCALE = 6;
-const SIZE = 16; // 16x16 pixel grid
+const SIZE = 16;
 
-// Beany sprite data - each row is a pixel row, columns define the shape
-// 0=empty, 1=body, 2=dark(eye/nose), 3=highlight
-const BEANY_SPRITE = [
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
-  [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
-  [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
-  [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
-  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
-  [0,0,1,1,1,2,1,1,1,1,2,1,1,1,0,0],
-  [0,1,1,1,1,2,1,1,1,1,2,1,1,1,1,0],
-  [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
-  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
-  [0,0,0,1,1,1,1,3,3,1,1,1,1,0,0,0],
-  [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
-  [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
-  [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-];
-
-const EL_COLORS = {
-  金: { body:'#e2b04a', dark:'#8b6914', light:'#f5d78a', eye:'#0d1117' },
-  木: { body:'#3fb950', dark:'#1a6b24', light:'#7be08a', eye:'#0d1117' },
-  水: { body:'#58a6ff', dark:'#1a4f8b', light:'#a3d0ff', eye:'#0d1117' },
-  火: { body:'#f85149', dark:'#8b1a14', light:'#fc9e9a', eye:'#0d1117' },
-  土: { body:'#d2991d', dark:'#6b4e0a', light:'#f0c95a', eye:'#0d1117' }
+// Emotion sprites — each is a 16x16 grid
+// 0=empty, 1=body, 2=eye, 3=highlight, 4=mouth, 5=ear
+const SPRITES = {
+  // Neutral — round, calm
+  neutral: [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,5,0,0,5,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,1,1,1,2,1,1,1,1,2,1,1,1,0,0],
+    [0,1,1,1,1,1,1,4,4,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,3,3,1,1,1,1,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  // Curious — eyes wide, ears up, slight lean
+  curious: [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,5,0,0,5,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,1,1,1,2,2,1,1,2,2,1,1,1,0,0],
+    [0,1,1,1,1,1,1,4,4,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,3,3,1,1,1,1,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  // Happy — eyes closed ^, mouth open, bounce
+  happy: [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,1,1,1,1,2,2,2,2,1,1,1,1,0,0],
+    [0,1,1,1,1,1,1,4,4,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,3,3,1,1,1,1,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  // Alert — eyes wide+high, body tense, ears straight
+  alert: [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,5,0,0,5,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,1,1,2,2,1,1,2,2,1,1,0,0],
+    [0,0,1,1,1,2,1,1,1,1,2,1,1,1,0,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  // Uncomfortable — eyes narrow, body compact, ears flat
+  shrink: [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,1,2,1,1,1,1,2,1,1,1,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  // Comfortable — eyes half-closed, spread out
+  comfy: [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,1,1,1,2,1,1,1,1,2,1,1,1,0,0],
+    [0,1,1,1,1,1,4,4,4,4,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,1,1,1,1,1,3,3,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  // Sleep — eyes closed - -, mouth tiny
+  sleep: [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,1,1,2,1,1,1,1,1,1,2,1,1,0,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,3,3,1,1,1,1,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ]
 };
 
-// Animation types → frame modifiers
+const EL_COLORS = {
+  金: { body:'#e2b04a', dark:'#8b6914', light:'#f5d78a', eye:'#0d1117', ear:'#c98a1a', mouth:'#8b6914' },
+  木: { body:'#3fb950', dark:'#1a6b24', light:'#7be08a', eye:'#0d1117', ear:'#2d8a3a', mouth:'#1a6b24' },
+  水: { body:'#58a6ff', dark:'#1a4f8b', light:'#a3d0ff', eye:'#0d1117', ear:'#3d7fd4', mouth:'#1a4f8b' },
+  火: { body:'#f85149', dark:'#8b1a14', light:'#fc9e9a', eye:'#0d1117', ear:'#d43a33', mouth:'#8b1a14' },
+  土: { body:'#d2991d', dark:'#6b4e0a', light:'#f0c95a', eye:'#0d1117', ear:'#b07d14', mouth:'#6b4e0a' }
+};
+
+// Animation frame data: { spriteKey, scaleX, scaleY, offsetX, offsetY, rotation }
 const ANIMS = {
-  idle: {
-    duration: 3000,
-    frames(sprite, t) {
-      const s = 1 + Math.sin(t/500)*0.03;
-      return { scaleX:s, scaleY:2-s, offsetY:Math.sin(t/300)*0.5 };
+  idle: { dur:3000, loop:true,
+    frame(t) {
+      const s = 1 + Math.sin(t/500)*0.02;
+      return { sprite:'neutral', scaleX:s, scaleY:2-s, offsetY:Math.sin(t/300)*1 };
     }
   },
-  bounce: {
-    duration: 600,
-    frames(sprite, t) {
-      const p = t/600; const bounce = Math.abs(Math.sin(p*Math.PI*2))*4;
-      return { offsetY:-bounce, scaleX:1+bounce*0.01, scaleY:1-bounce*0.02 };
+  bounce: { dur:600, loop:false, chain:'idle',
+    frame(t) {
+      const p = t/600;
+      return { sprite:'happy', offsetY:-Math.abs(Math.sin(p*Math.PI*2))*5, scaleY:1-Math.abs(Math.sin(p*Math.PI*2))*0.08 };
     }
   },
-  wiggle: {
-    duration: 500,
-    frames(sprite, t) {
+  wiggle: { dur:500, loop:false, chain:'idle',
+    frame(t) {
       const p = t/500;
-      return { offsetX:Math.sin(p*Math.PI*4)*2, rotation:Math.sin(p*Math.PI*4)*0.05 };
+      return { sprite:'curious', offsetX:Math.sin(p*Math.PI*4)*3, rotation:Math.sin(p*Math.PI*2)*0.08 };
     }
   },
-  tremble: {
-    duration: 400,
-    frames(sprite, t) {
-      const intensity = 1 - t/400;
-      return {
-        offsetX:(Math.random()-0.5)*3*intensity,
-        offsetY:(Math.random()-0.5)*2*intensity,
-      };
+  tremble: { dur:400, loop:false, chain:'idle',
+    frame(t) {
+      const i = 1-t/400;
+      return { sprite:'shrink', offsetX:(Math.random()-0.5)*4*i, offsetY:(Math.random()-0.5)*3*i, scaleX:0.9, scaleY:0.85 };
     }
   },
-  float: {
-    duration: 2500,
-    frames(sprite, t) {
-      return { offsetY:Math.sin(t/400)*2, offsetX:Math.cos(t/600)*1 };
+  float: { dur:2500, loop:true,
+    frame(t) {
+      return { sprite:'comfy', offsetY:Math.sin(t/400)*3, offsetX:Math.cos(t/600)*1.5 };
     }
   },
-  shrink: {
-    duration: 800,
-    frames(sprite, t) {
-      const p = t/800;
-      const s = p < 0.3 ? 1-p*0.5 : p < 0.6 ? 0.85+p*0.25 : 1;
-      return { scaleX:s, scaleY:s };
+  shrink: { dur:800, loop:false, chain:'idle',
+    frame(t) {
+      const p = t/800, s = p<0.3 ? 1-p*0.4 : p<0.6 ? 0.88+p*0.2 : 1;
+      return { sprite:'shrink', scaleX:s, scaleY:s };
     }
   },
-  expand: {
-    duration: 800,
-    frames(sprite, t) {
-      const p = t/800;
-      const s = p < 0.3 ? 1+p*0.3 : p < 0.6 ? 1.3-p*0.5 : 1;
-      return { scaleX:s, scaleY:s };
+  expand: { dur:800, loop:false, chain:'idle',
+    frame(t) {
+      const p = t/800, s = p<0.3 ? 1+p*0.25 : p<0.6 ? 1.25-p*0.4 : 1;
+      return { sprite:'comfy', scaleX:s, scaleY:s };
     }
   },
-  peek: {
-    duration: 1000,
-    frames(sprite, t) {
-      const p = t/1000;
-      return { offsetY:p < 0.5 ? -2*(p*2) : -2*(2-p*2), scaleY:p<0.5?1-p*0.1:1 };
-    }
-  },
-  sleep: {
-    duration: 4000,
-    frames(sprite, t) {
-      return { scaleY:1-Math.abs(Math.sin(t/500))*0.06, offsetY:0 };
+  sleep: { dur:4000, loop:true,
+    frame(t) {
+      return { sprite:'sleep', scaleY:1-Math.abs(Math.sin(t/600))*0.04 };
     }
   }
 };
 
-let animState = { type:'idle', start:0, cb:null, element:'金' };
-
-// ════ Canvas setup ════
 let beanyCanvases = {};
-function createBeanyCanvas() {
-  const id = 'b'+Math.random().toString(36).slice(2);
-  const container = document.createElement('div');
-  container.className = 'beany-stage';
-  const cvs = document.createElement('canvas');
-  cvs.width = SIZE*SCALE; cvs.height = SIZE*SCALE;
-  cvs.id = id;
-  const label = document.createElement('div');
-  label.className = 'beany-label';
-  container.appendChild(cvs);
-  container.appendChild(label);
-  beanyCanvases[id] = { cvs, label, el:animState.element, frame:null };
-  return { html:container.outerHTML, id };
-}
 
-function drawBeany(cvs, sprite, colors, frameData) {
+function drawBeany(cvs, sprite, colors, fd) {
   const ctx = cvs.getContext('2d');
   ctx.clearRect(0,0,cvs.width,cvs.height);
-  
-  const { scaleX=1, scaleY=1, offsetX=0, offsetY=0, rotation=0 } = frameData||{};
-  
+  const { scaleX=1, scaleY=1, offsetX=0, offsetY=0, rotation=0 } = fd||{};
   ctx.save();
-  const cx = cvs.width/2 + offsetX*SCALE;
-  const cy = cvs.height/2 + offsetY*SCALE;
-  ctx.translate(cx, cy);
-  ctx.rotate(rotation||0);
-  
+  ctx.translate(cvs.width/2 + offsetX*SCALE, cvs.height/2 + offsetY*SCALE);
+  if(rotation) ctx.rotate(rotation);
   for(let y=0; y<SIZE; y++){
     for(let x=0; x<SIZE; x++){
       const px = sprite[y]?.[x]||0;
@@ -202,21 +277,72 @@ function drawBeany(cvs, sprite, colors, frameData) {
       if(px===1) ctx.fillStyle = colors.body;
       else if(px===2) ctx.fillStyle = colors.eye;
       else if(px===3) ctx.fillStyle = colors.light;
+      else if(px===4) ctx.fillStyle = colors.mouth;
+      else if(px===5) ctx.fillStyle = colors.ear;
       ctx.fillRect(dx, dy, SCALE*scaleX, SCALE*scaleY);
     }
   }
   ctx.restore();
 }
 
-function startBeanyAnim(id, type, el, cb) {
+function moodToSprite(mood) {
+  if(/开心|满足|舒服|来劲/.test(mood)) return 'happy';
+  if(/好奇/.test(mood)) return 'curious';
+  if(/警觉|不舒服/.test(mood)) return 'shrink';
+  if(/舒服/.test(mood)) return 'comfy';
+  if(/放松|安稳|安静/.test(mood)) return 'comfy';
+  if(/平静|定/.test(mood)) return 'neutral';
+  if(/缩/.test(mood)) return 'shrink';
+  return 'neutral';
+}
+
+function moodToAnim(mood) {
+  if(/开心|满足|舒服|来劲/.test(mood)) return 'bounce';
+  if(/好奇/.test(mood)) return 'wiggle';
+  if(/警觉|不舒服/.test(mood)) return 'tremble';
+  if(/放松|安稳/.test(mood)) return 'expand';
+  if(/平静|安静/.test(mood)) return 'float';
+  if(/定/.test(mood)) return 'idle';
+  if(/缩/.test(mood)) return 'shrink';
+  return 'idle';
+}
+
+let animTimer = null;
+let animQueue = [];
+
+function startBeanyAnim(id, mood, el, moods) {
   const cvs = document.getElementById(id);
   if(!cvs) return;
   const label = cvs.parentElement ? cvs.parentElement.querySelector('.beany-label') : null;
   beanyCanvases[id] = { cvs, label, el:el||'金', frame:null };
+  
+  // Build animation sequence from moods
+  animQueue = (moods||[mood]).map(m => ({
+    type: moodToAnim(m),
+    sprite: moodToSprite(m),
+    mood: m
+  }));
+  if(animQueue.length === 0) animQueue = [{type:'idle',sprite:'neutral',mood:mood}];
+  
+  animState = { queueIdx:0, start:0, cb:null, element:el||'金' };
+  playNextInQueue(id);
+}
+
+function playNextInQueue(id) {
   const b = beanyCanvases[id];
-  b.el = el||'金';
-  animState = { type, start:performance.now(), cb, element:b.el };
-  if(b.frame) cancelAnimationFrame(b.frame);
+  if(!b) return;
+  if(animState.queueIdx >= animQueue.length) {
+    // Done with queue, go to idle
+    animState.type = 'idle';
+    animState.queueIdx = animQueue.length; // prevent re-entry
+    animState.start = performance.now();
+    b.frame = requestAnimationFrame(tickBeany.bind(null,id));
+    return;
+  }
+  const q = animQueue[animState.queueIdx];
+  animState.type = q.type;
+  animState.sprite = q.sprite;
+  animState.start = performance.now();
   b.frame = requestAnimationFrame(tickBeany.bind(null,id));
 }
 
@@ -227,30 +353,35 @@ function tickBeany(id, t) {
   const elapsed = t - animState.start;
   const anim = ANIMS[animState.type] || ANIMS.idle;
   const colors = EL_COLORS[animState.element] || EL_COLORS['金'];
+  const sprite = SPRITES[animState.sprite] || SPRITES.neutral;
   
-  let frameData;
-  if(elapsed > anim.duration && animState.type !== 'idle') {
-    // Transition to idle
-    animState.type = 'idle'; animState.start = t;
-    frameData = ANIMS.idle.frames(BEANY_SPRITE, 0);
-    if(animState.cb) { animState.cb(); animState.cb = null; }
-  } else {
-    frameData = anim.frames(BEANY_SPRITE, elapsed);
+  const fd = anim.frame(elapsed);
+  fd.sprite = sprite;
+  drawBeany(b.cvs, sprite, colors, fd);
+  
+  if(anim.loop === false && elapsed > anim.dur) {
+    // Move to next in queue, or chain
+    if(anim.chain === 'idle') {
+      animState.type = 'idle';
+      animState.sprite = 'neutral';
+      animState.start = t;
+    } else {
+      animState.queueIdx++;
+      if(animState.queueIdx < animQueue.length) {
+        const q = animQueue[animState.queueIdx];
+        animState.type = q.type;
+        animState.sprite = q.sprite;
+        animState.start = t;
+      } else {
+        animState.type = 'idle';
+        animState.sprite = 'neutral';
+        animState.start = t;
+        if(animState.cb) { animState.cb(); animState.cb = null; }
+      }
+    }
   }
   
-  drawBeany(b.cvs, BEANY_SPRITE, colors, frameData);
   b.frame = requestAnimationFrame(tickBeany.bind(null, id));
-}
-
-function animForBeanyMood(mood) {
-  if(/开心|满足|舒服|来劲/.test(mood)) return 'bounce';
-  if(/警觉|不舒服/.test(mood)) return 'shrink';
-  if(/好奇/.test(mood)) return 'wiggle';
-  if(/放松|安稳/.test(mood)) return 'expand';
-  if(/平静|安静/.test(mood)) return 'float';
-  if(/定/.test(mood)) return 'idle';
-  if(/缩|捏/.test(mood)) return 'shrink';
-  return 'wiggle';
 }
 
 // ═══════════════ SCENE DATA (from B组) ═══════════════
@@ -366,7 +497,7 @@ function rScene(){
   CARDS.forEach(c=>{h+=`<button class="cbtn" onclick="pick('${c.id}')" style="font-size:14px;padding:14px">${c.emoji} <strong>${c.label}</strong><span class="hint">${c.hint}</span></button>`;});
   h+=`</div>`; A.innerHTML=h;
   // Start idle animation
-  startBeanyAnim(S.beanyId, 'idle', '金');
+  startBeanyAnim(S.beanyId, '定', '金', ['定']);
   sd();
 }
 
@@ -411,7 +542,7 @@ function pick(sid){
   if(S.sn%3===0){h+=`<div style="margin:8px 12px"><button class="obtn" onclick="dayEnd()">一天结束，看 Beany 的变化 →</button></div>`;}
   else{h+=`<div style="margin:8px 12px"><button class="obtn" onclick="S.scr='scene';rScene()">下一场 →</button></div>`;}
   A.innerHTML=h;
-  startBeanyAnim(S.beanyId, anim, firstEl);
+  const moods=rx.map(r=>r.m); startBeanyAnim(S.beanyId, firstMood, firstEl, moods);
   sd();
 }
 
@@ -444,7 +575,7 @@ function rEnding(){
   h+=`<div style="text-align:center;font-size:11px;color:var(--d);margin:12px 0">你最常用 <strong>${card.label}</strong>（${topN}/9场）</div>`;
   h+=`<button class="obtn" onclick="location.reload()" style="margin:0 12px 20px">再来三天（换一种方式）</button></div>`;
   A.innerHTML=h;
-  startBeanyAnim(eb.id, 'bounce', dom);
+  startBeanyAnim(eb.id, '开心', dom, ['开心','满足','舒服']);
 }
 
 function topbar(){return `<div id="bar"><span class="day">Day ${Math.min(S.day,3)}</span><div class="hp-wrap"><div class="hp-fill" style="width:${S.hp}%"></div></div><span class="hp-num">❤️ ${S.hp}</span></div>`;}
