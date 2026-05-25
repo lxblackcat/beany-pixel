@@ -50,7 +50,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 .log{font-size:11px;color:var(--d);text-align:center;padding:4px 0;font-style:italic}
 
 /* Pixel Beany Canvas */
-.beany-stage{display:flex;flex-direction:column;align-items:center;padding:12px 0 4px;position:relative}
+.beany-stage{display:flex;background:radial-gradient(ellipse at center,rgba(210,153,29,.06) 0%,transparent 70%);flex-direction:column;align-items:center;padding:12px 0 4px;position:relative}
 .beany-stage canvas{image-rendering:pixelated}
 .beany-label{font-size:10px;color:var(--d);text-align:center;margin-top:4px}
 @keyframes sparkle{0%,100%{opacity:0;transform:translate(0,0) scale(0)}50%{opacity:1;transform:translate(0,-8px) scale(1)}}
@@ -60,7 +60,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 <body><div id="app"></div>
 <script>
 // ═══════════════ PIXEL BEANY ENGINE ═══════════════
-const SCALE = 4;
+const SCALE = 6;
 const SIZE = 16; // 16x16 pixel grid
 
 // Beany sprite data - each row is a pixel row, columns define the shape
